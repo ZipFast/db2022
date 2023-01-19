@@ -118,10 +118,27 @@ class ExtendibleHashTable : public HashTable<K, V> {
     /** @brief Get the local depth of the bucket. */
     inline auto GetDepth() const -> int { return depth_; }
 
+    inline auto SetDepth(int d) -> void { depth_ = d; }
+
     /** @brief Increment the local depth of a bucket. */
     inline void IncrementDepth() { depth_++; }
 
-    inline auto GetItems() -> std::list<std::pair<K, V>> & { return list_; }
+    inline auto GetItems() -> std::list<std::pair<K,V>> & { return list_; }
+
+    inline auto GetSize() -> size_t { return list_.size(); }
+
+    inline auto PopFront() -> void {
+      list_.pop_front();
+    }
+
+    inline auto Front() -> std::pair<K, V> {
+      return list_.front();
+    }
+
+    inline auto PushBack(std::pair<K, V> item) -> void {
+      list_.push_back(item);
+    }
+
 
     /**
      *
@@ -180,7 +197,11 @@ class ExtendibleHashTable : public HashTable<K, V> {
    * @brief Redistribute the kv pairs in a full bucket.
    * @param bucket The bucket to be redistributed.
    */
-  auto RedistributeBucket(std::shared_ptr<Bucket> bucket) -> void;
+  auto RedistributeBucket(std::shared_ptr<Bucket> bucket, size_t index, const K& key) -> void;
+
+  auto GetHighestBit(std::shared_ptr<Bucket> bucket) -> int {
+    return 1 << bucket->GetDepth();
+  }
 
   /*****************************************************************
    * Must acquire latch_ first before calling the below functions. *
