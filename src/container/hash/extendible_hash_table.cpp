@@ -45,24 +45,24 @@ auto ExtendibleHashTable<K, V>::RedistributeBucket(std::shared_ptr<Bucket> bucke
      num_buckets_ *= 2;
   }
   auto highBit = GetHighestBit(bucket);
-  auto bucket0 = std::make_shared<Bucket>(bucket_size_);
-  auto bucket1 = std::make_shared<Bucket>(bucket_size_);
-  bucket0->SetDepth(bucket->GetDepth()+1);
-  bucket1->SetDepth(bucket->GetDepth()+1);
-  size_t size = bucket->GetSize();
-  for (size_t i = 0; i < size; i++) {
-    auto item = bucket->Front();
+  size_t localIndex = (std::hash<K>()(key) & highBit - 1);
+  dir_[localIndex+highBit] = std::make_shared<Bucket>(bucket_size_);
+  auto bucket0 = dir_[localIndex];
+  auto bucket1 = dir_[localIndex+highBit];
+  bucket0->IncrementDepth();
+  bucket1->SetDepth(bucket0->GetDepth());
 
-    bucket->PopFront();
+  size_t size = bucket0->GetSize();
+  for (size_t i = 0; i < size; i++) {
+    auto item = bucket0->Front();
+
+    bucket0->PopFront();
 
     auto h = std::hash<K>()(item.first) & highBit;
     if (h)
       bucket1->PushBack(std::make_pair(item.first, item.second));
     else
       bucket0->PushBack(std::make_pair(item.first, item.second));
-  }
-  for (size_t i = std::hash<K>()(key) & (highBit - 1); i < dir_.size(); i+=highBit) {
-    dir_[i] = i & highBit ? bucket1 : bucket0;
   }
 }
 
@@ -144,7 +144,6 @@ auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
   if (iter == list_.cend()) {
     return false;
   }
-  std::cout << iter->first << std::endl;
   value = iter->second;
   return true;
 }
