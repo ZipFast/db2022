@@ -36,6 +36,9 @@ namespace bustub {
  */
 class LRUKReplacer {
  public:
+
+   using ListIter = std::list<frame_id_t>::iterator;
+
   /**
    *
    * TODO(P1): Add implementation
@@ -131,15 +134,22 @@ class LRUKReplacer {
    * @return size_t
    */
   auto Size() -> size_t;
-
+  
  private:
+  struct Record {
+    size_t hit_count_{0};
+    bool evictable_{true};
+    std::list<frame_id_t>::iterator pos_;
+  };
   // TODO(student): implement me! You can replace these member variables as you like.
   // Remove maybe_unused if you start using them.
-  [[maybe_unused]] size_t current_timestamp_{0};
-  [[maybe_unused]] size_t curr_size_{0};
-  [[maybe_unused]] size_t replacer_size_;
-  [[maybe_unused]] size_t k_;
+  size_t curr_size_{0};
+  size_t replacer_size_;
+  size_t k_;
   std::mutex latch_;
+  std::list<frame_id_t> hist_list_;
+  std::list<frame_id_t> cache_list_;
+  std::unordered_map<frame_id_t, Record> records_;
 };
 
 }  // namespace bustub
